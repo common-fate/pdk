@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "{{ .Name }}"
+version = "0.1.0"
+description = "{{ .Description }}"
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+commonfate-provider = "^0.1.6"
+
+[tool.poetry.group.dev.dependencies]
+autopep8 = "^2.0.1" 
+fastapi = "^0.89.1"
+requests = "^2.28.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

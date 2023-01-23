@@ -1,0 +1,18 @@
+import os
+from commonfate_provider import loader
+from commonfate_provider import StringLoader
+from commonfate_provider.runtime import AWSLambdaRuntime
+
+(Provider, Args) = loader.load_provider()
+
+config_string = os.getenv("PROVIDER_CONFIG")
+if config_string is None:
+    raise Exception("PROVIDER_CONFIG must be set")
+
+config_loader = StringLoader(config_string)
+provider = Provider(config_loader)
+
+runtime = AWSLambdaRuntime(provider, Args)
+
+def lambda_handler(event, context):
+    runtime.handle(event, context)
