@@ -1,0 +1,6 @@
+language = "python3.9"
+
+[python]
+class = "providers.Provider"
+arg_schema = "providers.Args"
+requirements_file = "requirements.txt"
