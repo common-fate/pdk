@@ -26,11 +26,6 @@ func run(ctx *cli.Context, AppFs afero.Fs, repoDirPath string, cfg Config) error
 		} else {
 			return err
 		}
-	} else {
-		err = AppFs.RemoveAll(repoDirPath)
-		if err != nil {
-			return err
-		}
 	}
 
 	err = gitInit(repoDirPath)
