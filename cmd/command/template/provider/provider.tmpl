@@ -2,12 +2,27 @@
 from commonfate_provider import provider, args, resources
 
 class Provider(provider.Provider):
-    api_URL = provider.String(usage="the test vault URL")
+    # Initialize fields that are provided by environment variables here. 
+    # In this example, `unique_vault_id` is pass as env variable.
     unique_vault_id = provider.String(usage="the unique vault ID")
 
     def __init__(self, config_loader):
         super().__init__(config_loader)
 
+"""
+
+Any arguments that provider has are defined as resources. 
+In this example, "Vault" is a resource that this provider defines.
+
+"""
+class Vault(resources.Resource):
+    name: str = resources.Name()
+
+"""
+
+Create Args Class from the Resource Class.
+
+"""
 class Args(args.Args):
     vault = args.Resource(
         title="Vault",
