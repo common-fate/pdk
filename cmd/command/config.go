@@ -2,8 +2,7 @@ package command
 
 import (
 	"encoding/json"
-
-	"github.com/spf13/afero"
+	"os"
 )
 
 type Config struct {
@@ -12,13 +11,13 @@ type Config struct {
 }
 
 // save the config to JSON file.
-func (c *Config) Save(fs afero.Fs, path string) (*afero.File, error) {
+func (c *Config) Save(path string) (*os.File, error) {
 	cfg, err := json.Marshal(c)
 	if err != nil {
 		return nil, err
 	}
 
-	f, err := fs.Create(path)
+	f, err := os.Create(path)
 	if err != nil {
 		return nil, err
 	}
@@ -30,5 +29,5 @@ func (c *Config) Save(fs afero.Fs, path string) (*afero.File, error) {
 		return nil, err
 	}
 
-	return &f, nil
+	return f, nil
 }

@@ -1,6 +1,7 @@
 package command
 
 import (
+	"embed"
 	"fmt"
 	"html/template"
 	"io/fs"
@@ -10,15 +11,17 @@ import (
 	"strings"
 
 	"github.com/common-fate/clio"
-	"github.com/spf13/afero"
 	"github.com/urfave/cli/v2"
 )
 
-func run(ctx *cli.Context, AppFs afero.Fs, repoDirPath string, cfg Config) error {
-	_, err := AppFs.Stat(repoDirPath)
+//go:embed template/**
+var templateFiles embed.FS
+
+func run(ctx *cli.Context, repoDirPath string, cfg Config) error {
+	_, err := os.Stat(repoDirPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			err := AppFs.Mkdir(repoDirPath, 0777)
+			err := os.Mkdir(repoDirPath, 0777)
 			if err != nil {
 				return err
 			}
@@ -33,44 +36,42 @@ func run(ctx *cli.Context, AppFs afero.Fs, repoDirPath string, cfg Config) error
 		return nil
 	}
 
-	err = afero.Walk(AppFs, "./template", func(p string, info fs.FileInfo, err error) error {
+	err = fs.WalkDir(templateFiles, ".", func(p string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 
 		packageName := cfg.Name
 		newPath := strings.Replace(p, "template", packageName, 1)
-		newPath = strings.Replace(newPath, "package-name", packageName, 1)
+		newPath = strings.Replace(newPath, "provider", packageName, 1)
 		filename := path.Base(p)
-
-		isDir, err := afero.IsDir(AppFs, p)
-		if err != nil {
-			return err
-		}
 
 		// If the walked path is directory then create directory and return
 		// Subdirectory with `package-name` is replace with provided package name.
-		if isDir {
-			_, err := AppFs.Stat(newPath)
+		if d.IsDir() {
+			_, err := os.Stat(newPath)
 			if err != nil {
 				if os.IsNotExist(err) {
 					// replace package-name directory name with provided provider registry name.
-					if filename == "package-name" {
-						newPath = strings.Replace(newPath, "package-name", cfg.Name, -1)
+					if filename == "provider" {
+						newPath = strings.Replace(newPath, "provider", cfg.Name, -1)
 					}
 
 					clio.Debugf("creating directory %s \n", newPath)
-					err := AppFs.Mkdir(newPath, 0777)
+					err := os.Mkdir(newPath, 0777)
 					if err != nil {
 						return err
 					}
+
+					return nil
 				}
+				return err
 			}
 
 			return nil
 		}
 
-		f, err := afero.ReadFile(AppFs, p)
+		f, err := templateFiles.ReadFile(p)
 		if err != nil {
 			return err
 		}
@@ -80,7 +81,7 @@ func run(ctx *cli.Context, AppFs afero.Fs, repoDirPath string, cfg Config) error
 			fileExtension = ".toml"
 		}
 
-		newFile, err := AppFs.Create(path.Join(strings.Replace(newPath, ".tmpl", fileExtension, 1)))
+		newFile, err := os.Create(path.Join(strings.Replace(newPath, ".tmpl", fileExtension, 1)))
 		if err != nil {
 			fmt.Println("err", err.Error())
 			return err
@@ -104,7 +105,6 @@ func run(ctx *cli.Context, AppFs afero.Fs, repoDirPath string, cfg Config) error
 		}
 
 		return nil
-
 	})
 	if err != nil {
 		return err
@@ -130,8 +130,6 @@ var Init = cli.Command{
 		},
 	},
 	Action: func(c *cli.Context) error {
-		var AppFs = afero.NewOsFs()
-
 		name := c.String("name")
 		description := c.String("description")
 
@@ -142,7 +140,7 @@ var Init = cli.Command{
 
 		repoDirPath := config.Name
 
-		err := run(c, AppFs, repoDirPath, config)
+		err := run(c, repoDirPath, config)
 		if err != nil {
 			clio.Debugf("Failed to scaffold with error %s", err)
 
@@ -155,7 +153,7 @@ var Init = cli.Command{
 			return err
 		}
 
-		_, err = config.Save(AppFs, path.Join(repoDirPath, "config.json"))
+		_, err = config.Save(path.Join(repoDirPath, "config.json"))
 		if err != nil {
 			return err
 		}
