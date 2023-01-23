@@ -17,7 +17,7 @@ func main() {
 		Usage:     "https://commonfate.io",
 		UsageText: "pdk [options] [command]",
 		Version:   build.Version,
-		Commands:  []*cli.Command{&command.Example},
+		Commands:  []*cli.Command{&command.Init},
 	}
 	err := app.Run(os.Args)
 	if err != nil {
