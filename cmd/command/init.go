@@ -33,11 +33,6 @@ func run(ctx *cli.Context, AppFs afero.Fs, repoDirPath string, cfg Config) error
 		}
 	}
 
-	err = AppFs.Mkdir(repoDirPath, 0777)
-	if err != nil {
-		return err
-	}
-
 	err = gitInit(repoDirPath)
 	if err != nil {
 		return nil
@@ -150,23 +145,23 @@ var Init = cli.Command{
 			Description: description,
 		}
 
-		_, err := config.Save(AppFs)
-		if err != nil {
-			return err
-		}
-
 		repoDirPath := config.Name
 
-		err = run(c, AppFs, repoDirPath, config)
+		err := run(c, AppFs, repoDirPath, config)
 		if err != nil {
 			clio.Debugf("Failed to scaffold with error %s", err)
 
-			// remove all the files if there is error.
-			err := AppFs.RemoveAll(repoDirPath)
-			if err != nil {
-				return err
-			}
+			// // remove all the files if there is error.
+			// err := AppFs.RemoveAll(repoDirPath)
+			// if err != nil {
+			// 	return err
+			// }
 
+			return err
+		}
+
+		_, err = config.Save(AppFs, path.Join(repoDirPath, "config.json"))
+		if err != nil {
 			return err
 		}
 

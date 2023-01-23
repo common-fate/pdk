@@ -12,13 +12,13 @@ type Config struct {
 }
 
 // save the config to JSON file.
-func (c *Config) Save(fs afero.Fs) (*afero.File, error) {
+func (c *Config) Save(fs afero.Fs, path string) (*afero.File, error) {
 	cfg, err := json.Marshal(c)
 	if err != nil {
 		return nil, err
 	}
 
-	f, err := fs.Create("config.json")
+	f, err := fs.Create(path)
 	if err != nil {
 		return nil, err
 	}
