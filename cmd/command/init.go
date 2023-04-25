@@ -2,31 +2,28 @@ package command
 
 import (
 	"bytes"
-	"embed"
 	"fmt"
-	"html/template"
-	"io/fs"
-	"log"
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/common-fate/boilermaker"
 	"github.com/common-fate/clio"
 	"github.com/common-fate/clio/clierr"
+	"github.com/common-fate/pdk/boilerplate"
 	"github.com/urfave/cli/v2"
 )
 
-type Config struct {
+type TemplateData struct {
+	// PackageName is the name of the Python package folder to create
+	PackageName string
 	Name        string
 	Publisher   string
 	Version     string
-	UseResource bool
 }
-
-//go:embed template/**
-var templateFiles embed.FS
 
 // getPythonCommand finds the actual command to run Python.
 // It returns an error if we can't find a Python executable in
@@ -62,140 +59,6 @@ func createPyVenv(p string) error {
 	return nil
 }
 
-func gitInit(repoDirPath string) error {
-	clio.Debugf("git init %s\n", repoDirPath)
-
-	cmd := exec.Command("git", "init", repoDirPath)
-	err := cmd.Run()
-	if err != nil {
-		return err
-
-	}
-
-	return nil
-}
-
-func run(ctx *cli.Context, cfg Config, shouldCreateFolder bool) error {
-	repoDirPath, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-
-	if shouldCreateFolder {
-		repoDirPath = path.Join(repoDirPath, cfg.Name)
-		_, err = os.Stat(repoDirPath)
-		if err != nil {
-			if os.IsNotExist(err) {
-				err := os.MkdirAll(repoDirPath, 0777)
-				if err != nil {
-					return err
-				}
-			} else {
-				return err
-			}
-		}
-
-		err = gitInit(repoDirPath)
-		if err != nil {
-			return fmt.Errorf("initializing git repository err: %s", err)
-		}
-	}
-
-	err = createPyVenv(repoDirPath)
-	if err != nil {
-		return fmt.Errorf("creating python venv err: %s", err)
-	}
-
-	err = fs.WalkDir(templateFiles, ".", func(p string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		packageName := cfg.Name
-		newPath := ""
-		if shouldCreateFolder {
-			newPath = path.Join(strings.Replace(p, "template", packageName, 1))
-		} else {
-			// we need to remove the template portion of the path `template/abc/efg`
-			parts := strings.Split(p, "/")
-			newPath = path.Join(parts[1:]...)
-		}
-
-		if newPath == "" || newPath == "template" {
-			return nil
-		}
-
-		// If the walked path is directory then create directory and return
-		// Subdirectory with `package-name` is replace with provided package name.
-		if d.IsDir() {
-			_, err := os.Stat(newPath)
-			if err != nil {
-				if os.IsNotExist(err) {
-					clio.Debugf("creating directory %s \n", newPath)
-					err := os.Mkdir(newPath, 0777)
-					if err != nil {
-						return err
-					}
-
-					return nil
-				}
-				return err
-			}
-
-			return nil
-		}
-
-		f, err := templateFiles.ReadFile(p)
-		if err != nil {
-			return err
-		}
-
-		if !strings.HasSuffix(newPath, ".tmpl") {
-			// not a template
-			err = os.WriteFile(newPath, f, 0644)
-			if err != nil {
-				return err
-			}
-		}
-
-		// if we get here, it's a template that we need to interpolate.
-		// an example template file is provider.py.tmpl
-		// trim the .tmpl extension - so we're left with provider.py
-		newPath = strings.TrimSuffix(newPath, ".tmpl")
-
-		newFile, err := os.Create(newPath)
-		if err != nil {
-			return err
-		}
-
-		defer newFile.Close()
-
-		t, err := template.New("t").Parse(string(f))
-		if err != nil {
-			return err
-		}
-
-		err = t.Execute(newFile, cfg)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-
-	clio.Info("Generating virtual environment for python & installing Packages.")
-
-	err = installPythonDependencies(repoDirPath)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 var Init = cli.Command{
 	Name:  "init",
 	Usage: "Scaffold a template for an Access Provider",
@@ -213,17 +76,18 @@ var Init = cli.Command{
 		&cli.StringFlag{
 			Name:    "template",
 			Aliases: []string{"t"},
-			Usage:   "Use template=resource for resource fetching example",
+			Usage:   "The Provider template to use",
+			Value:   "basic",
 		},
 		&cli.StringFlag{
 			Name:    "version",
 			Aliases: []string{"v"},
-			Usage:   "Initial version for the provider",
+			Usage:   "Initial version for the Provider",
 			Value:   "v0.1.0",
 		},
 		&cli.BoolFlag{
 			Name:  "create-folder",
-			Usage: "Create a new folder and initialize a git repository",
+			Usage: "Create a new folder for the Provider",
 		},
 	},
 	Action: func(c *cli.Context) error {
@@ -232,15 +96,9 @@ var Init = cli.Command{
 		version := c.String("version")
 		shouldCreateFolder := c.Bool("create-folder")
 
-		useResource := false
-		if c.String("template") == "resource" {
-			clio.Info("Scaffolding a resource fetching boilerplate example")
-			useResource = true
-		}
-
 		files, err := os.ReadDir(".")
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 
 		dir, err := os.Getwd()
@@ -278,14 +136,74 @@ var Init = cli.Command{
 			}
 		}
 
-		config := Config{
+		templateFlag := c.String("template")
+
+		data := TemplateData{
+			PackageName: "provider_" + strings.ReplaceAll(name, "-", "_"),
 			Name:        name,
 			Publisher:   publisher,
 			Version:     version,
-			UseResource: useResource,
 		}
 
-		err = run(c, config, shouldCreateFolder)
+		boilerplates, err := boilermaker.ParseMapFS(boilerplate.TemplateFiles, "templates")
+		if err != nil {
+			return err
+		}
+
+		boilerplate, ok := boilerplates[templateFlag]
+		if !ok {
+			var availableTemplates []string
+
+			for k := range boilerplates {
+				availableTemplates = append(availableTemplates, k)
+			}
+
+			return fmt.Errorf("invalid template %s. available templates: %s", templateFlag, strings.Join(availableTemplates, ", "))
+		}
+
+		result, err := boilerplate.Generate(data)
+		if err != nil {
+			return err
+		}
+
+		if shouldCreateFolder {
+			dir = path.Join(dir, "cf-provider-"+data.Name)
+			_, err = os.Stat(dir)
+			if err != nil {
+				if os.IsNotExist(err) {
+					err := os.MkdirAll(dir, 0777)
+					if err != nil {
+						return err
+					}
+				} else {
+					return err
+				}
+			}
+		}
+
+		for f, contents := range result {
+			fullpath := filepath.Join(dir, f)
+			parent := filepath.Dir(fullpath)
+			err := os.MkdirAll(parent, 0755)
+			if err != nil {
+				return err
+			}
+
+			err = os.WriteFile(fullpath, []byte(contents), 0644)
+			if err != nil {
+				return err
+			}
+			clio.Infof("created %s", fullpath)
+		}
+
+		err = createPyVenv(dir)
+		if err != nil {
+			return fmt.Errorf("creating python venv err: %s", err)
+		}
+
+		clio.Info("Generating virtual environment for python & installing Packages.")
+
+		err = installPythonDependencies(dir)
 		if err != nil {
 			return err
 		}
@@ -302,9 +220,9 @@ var Init = cli.Command{
 // and installs commonfate_provider package and other dependencies packages.
 // then it creates requirements.txt file based on the output of pip freeze command.
 func installPythonDependencies(p string) error {
-	clio.Info("running .venv/bin/pip install commonfate_provider black")
+	clio.Info("running .venv/bin/pip install commonfate_provider black structlog")
 
-	cmd := exec.Command(".venv/bin/pip", "install", "commonfate_provider", "black")
+	cmd := exec.Command(".venv/bin/pip", "install", "commonfate_provider", "black", "structlog")
 
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout

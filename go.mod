@@ -16,6 +16,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.18.10
 	github.com/awslabs/goformation/v7 v7.7.4
 	github.com/bradleyjkemp/cupaloy v2.3.0+incompatible
+	github.com/common-fate/boilermaker v0.1.1
 	github.com/common-fate/clio v1.1.0
 	github.com/common-fate/cloudform v0.6.0
 	github.com/common-fate/provider-registry-sdk-go v0.18.0
