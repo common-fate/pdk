@@ -1,0 +1,162 @@
+import typing
+from commonfate_provider import provider, target, access, resources
+
+{{if .UseResource }}
+
+class Provider(provider.Provider):
+    """
+
+    The Provider class contains initialization logic which your `grant` and `revoke` function relies upon.
+
+    You can set any configuration fields that are required for the Provider here.
+    In this example, `api_url` is a configuration field that we use to sign an API call to .
+
+    """
+
+    api_key = provider.String(description="The API key")
+
+    def setup(self):
+        # construct any API clients here.
+        pass
+
+
+class Environment(resources.Resource):
+    """
+
+    The list of options or resources that user can choose from.
+
+    In this example, "Production" is a resource of type Environment.
+
+    """
+
+    name: str = resources.Name()
+
+
+class ListEnvironment(tasks.Task):
+    """
+
+    ListEnvironment is a Task which can be used to make an API call to fetch the resource.
+
+    In this example, for simplicity, instead of making an API call, we are simply returning the list of development environments
+    and registering them as resource.
+
+    """
+
+    options: typing.List[Environment] = [
+        {"id": "prod_abcd", "name": "Production"},
+        {"id": "staging_efgh", "name": "Staging"},
+        {"id": "uat_ijkl", "name": "UAT"},
+        {"id": "dev_mnop", "name": "Development"},
+        {"id": "qa_qrst", "name": "QA"},
+    ]
+
+    def run(self, p: Provider):
+        for e in self.options:
+            resources.register(Environment(id=e["id"], name=e["name"]))
+
+
+class Args(targets.Targets):
+    """
+
+    Args are the things that Access Providers grants access to.
+
+    In this example, environment is an argument which lists different software development environment that user can request access to.
+
+    """
+
+    environment = targets.Resource(
+        title="Software Development Environment",
+        description="Different development environment like Staging, UAT, Production",
+        resource=Environment,
+        ## this field is used in the UI to check if access rule creation can select multiple options or not
+        ## in this example, marking this as "MULTISELECT" means that admin can create a single access rule with multiple environment options.
+        rule_element=targets.FormElement.MULTISELECT,
+        ## this field is used in the UI to make sure that access rule request can only consist a single option.
+        ## User can only request to "staging" or "UAT" at a time.
+        request_element=targets.FormElement.SELECT,
+    )
+
+
+@provider.grant()
+def grant(p: Provider, subject: str, target: EnvironmentTarget) -> provider.GrantResult:
+    """
+
+    Add your grant logic here.
+
+    """
+
+    print(f"granting access to {subject} for environment={target.environment}")
+
+    ## Add your grant logic here
+
+
+@provider.revoke()
+def revoke(p: Provider, subject: str, target: EnvironmentTarget):
+    """
+
+    Add your revoke logic here.
+
+    """
+    print(f"revoking access from {subject}for environment={target.environment}")
+
+
+@resources.fetcher
+def fetch_environments(p: Provider):
+    tasks.call(ListEnvironment())
+
+{{else}}
+
+class Provider(provider.Provider):
+    """
+
+    The Provider class contains initialization logic which your `grant` and `revoke` function relies upon.
+
+    You can set any configuration fields that are required for the Provider here.
+    In this example, `api_url` is a configuration field that we use to sign an API call to .
+
+    """
+
+    api_key = provider.String(description="The API key")
+
+    def setup(self):
+        # construct any API clients here
+        pass
+
+@access.target(kind="Environment")
+class EnvironmentTarget:
+    """
+
+    Args are the things that Access Providers grants access to.
+
+    In this example, environment is an argument which lists different software development environment that user can request access to.
+
+    """
+
+    environment = target.String(
+        title="Software Development Environment",
+    )
+
+@access.grant()
+def grant(p: Provider, subject: str, target: EnvironmentTarget) -> access.GrantResult:
+    """
+
+    Add your grant logic here.
+
+    """
+
+    print(f"granting access to {subject} for environment={target.environment}")
+
+    ## Add your grant logic here
+
+
+@access.revoke()
+def revoke(p: Provider, subject: str, target: EnvironmentTarget):
+    """
+
+    Add your revoke logic here.
+
+    """
+    print(f"revoking access from {subject} for environment={target.environment}")
+
+{{end}}
+

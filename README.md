@@ -1,2 +1,3 @@
-# pdk-
-Provider Registry CLI tool 
+# pdk
+
+The Common Fate Provider Development Kit.

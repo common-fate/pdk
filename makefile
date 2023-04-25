@@ -1,6 +1,4 @@
 PREFIX?=/usr/local
 
-build:
-	go build -o ./bin/dpdk cmd/pdk/main.go && mv ./bin/dpdk ${PREFIX}/bin
-
-	
+cli:
+	go build -o ./bin/pdk cmd/main.go && mv ./bin/pdk ${PREFIX}/bin
