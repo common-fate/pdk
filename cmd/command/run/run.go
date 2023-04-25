@@ -18,6 +18,7 @@ var Command = cli.Command{
 	Subcommands: []*cli.Command{
 		&grantCommand,
 		&revokeCommand,
+		&describeCommand,
 	},
 }
 
@@ -159,6 +160,30 @@ var revokeCommand = cli.Command{
 		}
 
 		clio.Successf("revoked access")
+		return nil
+	},
+}
+
+var describeCommand = cli.Command{
+	Name: "describe",
+	Action: func(c *cli.Context) error {
+		// expects that the config exists in the dotenv file
+		_ = godotenv.Load()
+
+		rt := handlerclient.Client{
+			Executor: handlerclient.Local{},
+		}
+		out, err := rt.Describe(c.Context)
+		if err != nil {
+			return err
+		}
+
+		outBytes, err := json.Marshal(out)
+		if err != nil {
+			return err
+		}
+
+		fmt.Println(string(outBytes))
 		return nil
 	},
 }

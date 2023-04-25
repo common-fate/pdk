@@ -9,7 +9,7 @@ import (
 	"github.com/common-fate/pdk/cmd/command/devhandler"
 	"github.com/common-fate/pdk/cmd/command/resources"
 	"github.com/common-fate/pdk/cmd/command/run"
-	"github.com/common-fate/pdk/cmd/command/test"
+
 	"github.com/common-fate/pdk/internal/build"
 	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v2"
@@ -27,7 +27,6 @@ func main() {
 			&command.Invoke,
 			&command.Init,
 			&devhandler.Command,
-			&test.Test,
 			&command.SchemaCommand,
 			&resources.Command,
 			&run.Command,

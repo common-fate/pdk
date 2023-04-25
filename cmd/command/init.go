@@ -293,7 +293,7 @@ var Init = cli.Command{
 		clio.Success("Success! Scaffolded a new Common Fate Provider")
 		clio.Info("Get started by running these commands next:")
 		fmt.Println("source .venv/bin/activate")
-		fmt.Println("pdk test describe")
+		fmt.Println("pdk run describe")
 		return nil
 	},
 }
