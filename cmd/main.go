@@ -10,6 +10,7 @@ import (
 	"github.com/common-fate/pdk/cmd/command/resources"
 	"github.com/common-fate/pdk/cmd/command/run"
 	"github.com/common-fate/pdk/cmd/command/test"
+	"github.com/common-fate/pdk/internal/build"
 	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v2"
 )
@@ -19,17 +20,7 @@ func main() {
 
 	app := &cli.App{
 		Name:  "pdk",
-		Usage: "deployment tool for access providers",
-		Flags: []cli.Flag{
-			&cli.BoolFlag{Name: "verbose", Usage: "Enable verbose logging, effectively sets environment variable CF_LOG=DEBUG"},
-		},
-		Before: func(ctx *cli.Context) error {
-			if ctx.Bool("verbose") {
-				os.Setenv("CF_LOG", "DEBUG")
-			}
-			clio.SetLevelFromEnv("CF_LOG")
-			return nil
-		},
+		Usage: "Common Fate Provider Development Kit",
 		Commands: []*cli.Command{
 			&command.UploadCommand,
 			&command.Package,
@@ -46,6 +37,7 @@ func main() {
 			&command.PublishCommand,
 			&command.PublisherCommand,
 		},
+		Version: build.Version,
 	}
 
 	if err := app.Run(os.Args); err != nil {
