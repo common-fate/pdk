@@ -15,8 +15,8 @@
 # vendor/
 
 bin
-gon.cf.hcl
-gon.cf.arm.hcl
+gon.pdk.hcl
+gon.pdk.arm.hcl
 .goreleaser.yml
 
 .env
