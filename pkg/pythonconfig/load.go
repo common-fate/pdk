@@ -9,7 +9,7 @@ import (
 
 type MetaInfo struct {
 	Icon        string `toml:"icon"`
-	DisplayName string `toml:"displayName"`
+	DisplayName string `toml:"display_name"`
 	Source      string `toml:"source"`
 }
 
