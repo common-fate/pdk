@@ -13,3 +13,12 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+bin
+gon.cf.hcl
+gon.cf.arm.hcl
+.goreleaser.yml
+
+.env
+
+launch.json
