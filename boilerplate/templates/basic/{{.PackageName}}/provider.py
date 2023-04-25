@@ -1,5 +1,6 @@
 import typing
-from commonfate_provider import provider, target, access
+import provider
+from provider import target, access
 import structlog
 
 log = structlog.get_logger()

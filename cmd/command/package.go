@@ -28,6 +28,7 @@ type Provider struct {
 	Name          string `json:"name"`
 	Version       string `json:"version"`
 	SchemaVersion string `json:"schema_version"`
+	PythonPackage string `json:"python_package"`
 }
 
 func (p Provider) String() string {
@@ -78,7 +79,7 @@ func PackageAndZip(ctx context.Context, providerPath string, flagOpts PackageFla
 		return err
 	}
 
-	cmd := exec.Command(".venv/bin/commonfate-provider-py", "schema")
+	cmd := exec.Command(".venv/bin/provider", "schema")
 
 	var outb bytes.Buffer
 	cmd.Stdout = &outb
@@ -97,6 +98,9 @@ func PackageAndZip(ctx context.Context, providerPath string, flagOpts PackageFla
 		// the schema from the registry and determining whether
 		// it has changed
 		SchemaVersion: "v1",
+		// the name of the provider package is 'provider_<snake_case_name>'
+		// where <snake_case_name> is the name of the provider, with '-' replaced with '_'
+		PythonPackage: "provider_" + strings.ReplaceAll(cfg.Name, "-", "_"),
 	}
 
 	var schema map[string]any
@@ -188,7 +192,7 @@ var Package = cli.Command{
 	Name: "package",
 	Flags: []cli.Flag{
 		&cli.PathFlag{Name: "path", Value: ".", Usage: "The path to the folder containing your provider code e.g ./cf-provider-example"},
-		&cli.StringSliceFlag{Name: "local-dependency", Usage: "(For development use) Add a local python package to the zip archive, e.g. commonfate_provider=../commonfate-provider-core/commonfate_provider"},
+		&cli.StringSliceFlag{Name: "local-dependency", Usage: "(For development use) Add a local python package to the zip archive, e.g. provider=../provider/provider"},
 	},
 	Action: func(c *cli.Context) error {
 		ctx := c.Context
@@ -329,18 +333,24 @@ func PackageProvider(opts PackageProviderOpts) error {
 
 	// add the provider itself. This is the module written by the
 	// Provider developer.
+	packagePath := path.Join(opts.ProviderPath, opts.Provider.PythonPackage)
+
 	err = addToZip(AddToZipOpts{
 		Writer:              myZip,
-		PathToZip:           opts.ProviderPath,
+		PathToZip:           packagePath,
 		OnlyTheseExtensions: []string{".py"},
 		Ignore:              gitignore,
-		ZippedPathPrefix:    "commonfate_provider_dist",
 	})
 	if err != nil {
 		return err
 	}
 
 	// add the manifest.json file with the metadata about the provider.
+	_, err = myZip.Create("commonfate_provider_dist/__init__.py")
+	if err != nil {
+		return err
+	}
+
 	w, err := myZip.Create("commonfate_provider_dist/manifest.json")
 	if err != nil {
 		return err

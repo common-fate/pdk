@@ -220,9 +220,9 @@ var Init = cli.Command{
 // and installs commonfate_provider package and other dependencies packages.
 // then it creates requirements.txt file based on the output of pip freeze command.
 func installPythonDependencies(p string) error {
-	clio.Info("running .venv/bin/pip install commonfate_provider black structlog")
+	clio.Info("running .venv/bin/pip install provider black structlog")
 
-	cmd := exec.Command(".venv/bin/pip", "install", "commonfate_provider", "black", "structlog")
+	cmd := exec.Command(".venv/bin/pip", "install", "provider", "black", "structlog")
 
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout

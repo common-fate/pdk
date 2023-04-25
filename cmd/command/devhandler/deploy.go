@@ -77,7 +77,7 @@ var deploy = cli.Command{
 
 		// get the schema of the provider
 		var out bytes.Buffer
-		cmd := exec.Command(".venv/bin/commonfate-provider-py", "schema")
+		cmd := exec.Command(".venv/bin/provider", "schema")
 		cmd.Stderr = os.Stderr
 		cmd.Dir = providerPath
 		cmd.Stdout = &out

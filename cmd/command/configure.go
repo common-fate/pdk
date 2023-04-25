@@ -19,7 +19,7 @@ var Configure = cli.Command{
 	Flags: []cli.Flag{},
 	Action: func(c *cli.Context) error {
 		var out bytes.Buffer
-		cmd := exec.Command(".venv/bin/commonfate-provider-py", "schema")
+		cmd := exec.Command(".venv/bin/provider", "schema")
 		cmd.Stderr = os.Stderr
 		cmd.Stdout = &out
 		err := cmd.Run()
