@@ -83,7 +83,7 @@ func Generate(pconfig pythonconfig.Config, schema providerregistrysdk.Schema) ([
 		FunctionName: cfn.RefPtr("HandlerID"),
 		Timeout:      cfn.Int(600),
 		Role:         cfn.GetAtt(ref.LambdaRole, "Arn"),
-		Handler:      cfn.String("commonfate_provider.runtime.aws_lambda_entrypoint.lambda_handler"),
+		Handler:      cfn.String("provider.runtime.aws_lambda_entrypoint.lambda_handler"),
 		Tags: []tags.Tag{
 			{Key: "common-fate-abac-role", Value: "access-provider"},
 		},

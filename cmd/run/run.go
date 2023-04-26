@@ -32,7 +32,7 @@ func RunEntrypoint(event msg.Request, env map[string]string) (*msg.Result, error
 
 	var b bytes.Buffer
 
-	cmd := exec.Command(".venv/bin/commonfate-provider-py", "run", eventString)
+	cmd := exec.Command(".venv/bin/provider", "run", eventString)
 	cmd.Stdout = &b
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin

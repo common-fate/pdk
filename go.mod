@@ -16,9 +16,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.18.10
 	github.com/awslabs/goformation/v7 v7.7.4
 	github.com/bradleyjkemp/cupaloy v2.3.0+incompatible
+	github.com/common-fate/boilermaker v0.1.1
 	github.com/common-fate/clio v1.1.0
 	github.com/common-fate/cloudform v0.6.0
-	github.com/common-fate/provider-registry-sdk-go v0.18.0
+	github.com/common-fate/provider-registry-sdk-go v0.19.0
 	github.com/common-fate/useragent v0.1.0
 	github.com/joho/godotenv v1.5.1
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
@@ -69,6 +70,8 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
+	github.com/labstack/echo/v4 v4.9.1 // indirect
+	github.com/labstack/gommon v0.4.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
@@ -79,14 +82,19 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sethvargo/go-retry v0.2.4 // indirect
+	github.com/valyala/bytebufferpool v1.0.0 // indirect
+	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
+	golang.org/x/crypto v0.1.0 // indirect
+	golang.org/x/mod v0.10.0 // indirect
 	golang.org/x/net v0.9.0 // indirect
 	golang.org/x/sys v0.7.0 // indirect
 	golang.org/x/term v0.7.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
+	golang.org/x/tools v0.8.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
